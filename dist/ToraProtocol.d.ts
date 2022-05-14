@@ -28,7 +28,7 @@ export declare class ToraProtocol {
     close(): void;
     send(code: Code, data: string): void;
     onConnect(): void;
-    onSocketData(data: MessageEvent | Buffer | ArrayBuffer | string): void;
+    onSocketData(data?: MessageEvent | Buffer | ArrayBuffer | string): void;
     error(error: string): void;
     onClose(): void;
     onError(msg: string): void;

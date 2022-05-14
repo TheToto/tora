@@ -126,10 +126,11 @@ export class ToraProtocol {
         this.send(Code.CUri, this.uri)
         for (const h of this.headers) {
             this.send(Code.CHeaderKey, h.key)
-            this.send(Code.CHeaderValue, h.key)
+            this.send(Code.CHeaderValue, h.value)
         }
         let get = ""
         for (const p of this.params) {
+            if (get != "") get += ";"
             get += encodeURIComponent(p.key) + "=" + encodeURIComponent(p.value)
             this.send(Code.CParamKey, p.key)
             this.send(Code.CParamValue, p.value)
@@ -138,28 +139,30 @@ export class ToraProtocol {
         this.send(Code.CExecute, "");
     }
 
-    onSocketData(data: MessageEvent | Buffer | ArrayBuffer | string) {
+    onSocketData(data?: MessageEvent | Buffer | ArrayBuffer | string) {
         if (!this.sock) return;
 
-        if (data instanceof MessageEvent)
-            data = data.data; // Can be a ArrayBuffer or a string
-
-        let bytes: Buffer
-        if (data instanceof Buffer)
-            bytes = data
-        else if (data instanceof ArrayBuffer)
-            bytes = new Buffer(data)
-        else if (typeof data === "string")
-            bytes = Buffer.from(data) // This should never append.
-        else throw new Error()
-
+        let bytes: Buffer | null = null
+        if (data) {
+            if (data instanceof MessageEvent)
+                data = data.data; // Can be a ArrayBuffer or a string
+            if (data instanceof Buffer)
+                bytes = data
+            else if (data instanceof ArrayBuffer)
+                bytes = new Buffer(data)
+            else if (typeof data === "string")
+                bytes = Buffer.from(data) // This should never append.
+            else throw new Error("Invalid type")
+        }
         if (this.remaining) {
-            bytes = Buffer.concat([this.remaining, bytes])
+            bytes = bytes ? Buffer.concat([this.remaining, bytes]): this.remaining
             this.remaining = null;
         }
+        if (!bytes) return // No more data to process
 
         if (bytes.length < 4) {
             this.remaining = bytes;
+            return;
         }
         const code: Code = bytes.readUint8(0);
         const d1 = bytes.readUint8(1);
@@ -192,6 +195,7 @@ export class ToraProtocol {
             default:
                 this.error("Can't handle " + code)
         }
+        if (this.remaining) this.onSocketData()
     }
 
     error(error: string) {
@@ -205,7 +209,7 @@ export class ToraProtocol {
     }
 
     onError(msg: string) {
-        throw new Error(msg);
+        console.error(msg);
     }
 
     onDisconnect() {}
