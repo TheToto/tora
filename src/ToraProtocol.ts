@@ -2,12 +2,15 @@ import {Socket} from "net";
 import {Code} from "./Code";
 import {Buffer} from "buffer";
 
-const URL_REGEXP = /^http:\/\/([^\/:]+)(:[0-9]+)?(.*)$/;
+const URL_REGEXP = /^(?:http|ws):\/\/([^\/:]+)(:[0-9]+)?(.*)$/;
 
 export class ToraProtocol {
     host: string
     port: number
     uri: string
+
+    customConnectHost?: string
+    customConnectPort?: number
 
     headers: {key: string, value: string}[]
     params: {key: string, value: string}[]
@@ -16,12 +19,15 @@ export class ToraProtocol {
     sock: WebSocket | Socket | null
     remaining: Buffer | null
 
-    constructor(url: string, useWebSocket: boolean) {
+    constructor(url: string, useWebSocket: boolean, customConnectHost?: string, customConnectPort?: number) {
         this.headers = []
         this.params = []
         this.useWebSocket = useWebSocket;
         this.sock = null;
         this.remaining = null;
+
+        this.customConnectHost = customConnectHost
+        this.customConnectPort = customConnectPort
 
         const match = url.match(URL_REGEXP)
         if (!match) {
@@ -64,7 +70,7 @@ export class ToraProtocol {
 
     connect() {
         if (this.useWebSocket) {
-            this.sock = new WebSocket(`ws://${this.host}:${this.port}`)
+            this.sock = new WebSocket(`ws://${this.customConnectHost || this.host}:${this.customConnectPort || this.port}`)
             this.sock.binaryType = "arraybuffer"
             this.sock.onopen = this.onConnect.bind(this)
             this.sock.onclose = this.onClose.bind(this)
@@ -79,7 +85,7 @@ export class ToraProtocol {
             this.sock.on("end", this.onClose.bind(this)) // ?
             this.sock.on("data", this.onSocketData.bind(this))
             this.sock.on("drain", () => {})
-            this.sock.connect(this.port, this.host)
+            this.sock.connect(this.customConnectPort || this.port, this.customConnectHost || this.host)
         }
     }
 

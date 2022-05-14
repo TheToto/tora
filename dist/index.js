@@ -1,3 +1,3 @@
 export { Code } from './Code';
-export { ToraProtocol } from './ToraClient';
+export { ToraProtocol } from './ToraProtocol';
 //# sourceMappingURL=index.js.map

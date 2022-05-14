@@ -1,4 +1,4 @@
-import {ToraProtocol} from "../src/ToraClient";
+import {ToraProtocol} from "../src/ToraProtocol";
 import {Buffer} from "buffer";
 import {Code} from "../src/Code";
 import {Socket} from "net";
