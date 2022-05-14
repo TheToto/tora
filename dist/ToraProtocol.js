@@ -46,7 +46,7 @@ export class ToraProtocol {
     }
     connect() {
         if (this.useWebSocket) {
-            this.sock = new WebSocket(`ws://${this.customConnectHost || this.host}:${this.customConnectPort || this.port}`);
+            this.sock = new WebSocket(`wss://${this.customConnectHost || this.host}:${this.customConnectPort || this.port}`);
             this.sock.binaryType = "arraybuffer";
             this.sock.onopen = this.onConnect.bind(this);
             this.sock.onclose = this.onClose.bind(this);
@@ -162,18 +162,18 @@ export class ToraProtocol {
             case Code.CHeaderValue:
             case Code.CHeaderAddValue:
             case Code.CLog:
-                break; // FIXME: Tora does not have this break.
+                break;
             case Code.CPrint:
                 this.onBytes(packet);
-                break; // FIXME: Tora does not have this break. WTF?
+                break;
             case Code.CError:
                 this.error(packet.toString());
                 break;
             case Code.CListen:
             case Code.CExecute:
-            // break; => neko
+                break;
             default:
-                this.error("Can't handle " + code);
+                this.error("Can't handle " + Code[code]);
         }
         if (this.remaining)
             this.onSocketData();
