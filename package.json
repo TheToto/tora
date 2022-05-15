@@ -11,7 +11,9 @@
   ],
   "scripts": {
     "test": "jest",
-    "build": "tsc -p tsconfig.json"
+    "build": "tsc -p tsconfig.json",
+    "clean": "rm -rf dist",
+    "format": "prettier src -w"
   },
   "devDependencies": {
     "@types/jest": "^27.5.1",

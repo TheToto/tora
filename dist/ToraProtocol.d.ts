@@ -6,8 +6,7 @@ export declare class ToraProtocol {
     host: string;
     port: number;
     uri: string;
-    customConnectHost?: string;
-    customConnectPort?: number;
+    webSocketBridge?: string;
     headers: {
         key: string;
         value: string;
@@ -19,7 +18,7 @@ export declare class ToraProtocol {
     useWebSocket: boolean;
     sock: WebSocket | Socket | null;
     remaining: Buffer | null;
-    constructor(url: string, useWebSocket: boolean, customConnectHost?: string, customConnectPort?: number);
+    constructor(url: string, useWebSocket: boolean, webSocketBridge?: string);
     addHeader(key: string, value: string): void;
     addParameters(key: string, value: string): void;
     reset(): void;

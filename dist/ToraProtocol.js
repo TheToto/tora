@@ -1,16 +1,15 @@
 import { Socket } from "net";
 import { Code } from "./Code";
 import { Buffer } from "buffer";
-const URL_REGEXP = /^(?:http|ws):\/\/([^\/:]+)(:[0-9]+)?(.*)$/;
+const URL_REGEXP = /^(?:https?|wss?):\/\/([^\/:]+)(:[0-9]+)?(.*)$/;
 export class ToraProtocol {
-    constructor(url, useWebSocket, customConnectHost, customConnectPort) {
+    constructor(url, useWebSocket, webSocketBridge) {
         this.headers = [];
         this.params = [];
         this.useWebSocket = useWebSocket;
         this.sock = null;
         this.remaining = null;
-        this.customConnectHost = customConnectHost;
-        this.customConnectPort = customConnectPort;
+        this.webSocketBridge = webSocketBridge;
         const match = url.match(URL_REGEXP);
         if (!match) {
             this.error("Invalid url");
@@ -19,7 +18,7 @@ export class ToraProtocol {
         this.host = match[1];
         let port = match[2];
         this.port = port ? parseInt(port.substring(1)) : 6667;
-        this.uri = match[3] || '/';
+        this.uri = match[3] || "/";
     }
     addHeader(key, value) {
         this.headers.push({ key, value });
@@ -41,12 +40,13 @@ export class ToraProtocol {
             this.error("Invalid URL " + url);
             return;
         }
-        this.uri = match[3] || '/';
+        this.uri = match[3] || "/";
         this.onConnect();
     }
     connect() {
         if (this.useWebSocket) {
-            this.sock = new WebSocket(`wss://${this.customConnectHost || this.host}:${this.customConnectPort || this.port}`);
+            this.sock = new WebSocket(this.webSocketBridge ||
+                `${this.port === 443 ? "wss" : "ws"}://${this.host}:${this.port}`);
             this.sock.binaryType = "arraybuffer";
             this.sock.onopen = this.onConnect.bind(this);
             this.sock.onclose = this.onClose.bind(this);
@@ -62,7 +62,7 @@ export class ToraProtocol {
             this.sock.on("end", this.onClose.bind(this)); // ?
             this.sock.on("data", this.onSocketData.bind(this));
             this.sock.on("drain", () => { });
-            this.sock.connect(this.customConnectPort || this.port, this.customConnectHost || this.host);
+            this.sock.connect(this.port, this.host);
         }
     }
     close() {
@@ -82,11 +82,11 @@ export class ToraProtocol {
     send(code, data) {
         let packet = [
             code.valueOf(),
-            data.length & 0xFF,
-            (data.length >> 8) & 0xFF,
-            (data.length >> 16) & 0xFF,
+            data.length & 0xff,
+            (data.length >> 8) & 0xff,
+            (data.length >> 16) & 0xff,
         ];
-        for (let i = 0; i < data.length; i++) // Meh.
+        for (let i = 0; i < data.length; i++)
             packet.push(data.charCodeAt(i));
         const buffer = Uint8Array.from(packet);
         if (this.sock instanceof WebSocket) {
@@ -136,7 +136,9 @@ export class ToraProtocol {
                 throw new Error("Invalid type");
         }
         if (this.remaining) {
-            bytes = bytes ? Buffer.concat([this.remaining, bytes]) : this.remaining;
+            bytes = bytes
+                ? Buffer.concat([this.remaining, bytes])
+                : this.remaining;
             this.remaining = null;
         }
         if (!bytes)
@@ -157,7 +159,8 @@ export class ToraProtocol {
         let packet = bytes.slice(4, dataLength + 4);
         if (dataLength + 4 != bytes.length)
             this.remaining = bytes.slice(dataLength + 4, bytes.length);
-        switch (code) { // Ex
+        switch (code // Ex
+        ) {
             case Code.CHeaderKey:
             case Code.CHeaderValue:
             case Code.CHeaderAddValue:
