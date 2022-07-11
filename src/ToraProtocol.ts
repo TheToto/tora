@@ -1,6 +1,8 @@
 import { Socket } from "net"
-import { Code } from "./Code"
 import { Buffer } from "buffer"
+import { WebSocket, MessageEvent } from "isomorphic-ws"
+
+import { Code } from "./Code"
 
 const URL_REGEXP = /^(?:https?|wss?):\/\/([^\/:]+)(:[0-9]+)?(.*)$/
 
@@ -69,10 +71,7 @@ export class ToraProtocol {
     connect() {
         if (this.useWebSocket) {
             this.sock = new WebSocket(
-                this.webSocketBridge ||
-                    `${this.port === 443 ? "wss" : "ws"}://${this.host}:${
-                        this.port
-                    }`
+                this.webSocketBridge || `${this.port === 443 ? "wss" : "ws"}://${this.host}:${this.port}`
             )
             this.sock.binaryType = "arraybuffer"
             this.sock.onopen = this.onConnect.bind(this)
@@ -104,12 +103,7 @@ export class ToraProtocol {
     }
 
     send(code: Code, data: string) {
-        let packet = [
-            code.valueOf(),
-            data.length & 0xff,
-            (data.length >> 8) & 0xff,
-            (data.length >> 16) & 0xff,
-        ]
+        let packet = [code.valueOf(), data.length & 0xff, (data.length >> 8) & 0xff, (data.length >> 16) & 0xff]
         for (let i = 0; i < data.length; i++) packet.push(data.charCodeAt(i))
 
         const buffer = Uint8Array.from(packet)
@@ -149,14 +143,11 @@ export class ToraProtocol {
             if (data instanceof MessageEvent) data = data.data // Can be a ArrayBuffer or a string
             if (data instanceof Buffer) bytes = data
             else if (data instanceof ArrayBuffer) bytes = new Buffer(data)
-            else if (typeof data === "string")
-                bytes = Buffer.from(data) // This should never append.
+            else if (typeof data === "string") bytes = Buffer.from(data) // This should never append.
             else throw new Error("Invalid type")
         }
         if (this.remaining) {
-            bytes = bytes
-                ? Buffer.concat([this.remaining, bytes])
-                : this.remaining
+            bytes = bytes ? Buffer.concat([this.remaining, bytes]) : this.remaining
             this.remaining = null
         }
         if (!bytes) return // No more data to process
@@ -175,8 +166,7 @@ export class ToraProtocol {
             return
         }
         let packet = bytes.slice(4, dataLength + 4)
-        if (dataLength + 4 != bytes.length)
-            this.remaining = bytes.slice(dataLength + 4, bytes.length)
+        if (dataLength + 4 != bytes.length) this.remaining = bytes.slice(dataLength + 4, bytes.length)
 
         switch (
             code // Ex

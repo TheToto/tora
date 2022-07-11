@@ -1,7 +1,8 @@
 /// <reference types="node" />
 import { Socket } from "net";
-import { Code } from "./Code";
 import { Buffer } from "buffer";
+import { WebSocket, MessageEvent } from "isomorphic-ws";
+import { Code } from "./Code";
 export declare class ToraProtocol {
     host: string;
     port: number;

@@ -1,4 +1,4 @@
-/node_modules/
-
-/.idea/
-/*.iml
+node_modules/
+.vscode/
+.idea/
+yarn-error.log
