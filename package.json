@@ -1,5 +1,5 @@
 {
-  "name": "tora",
+  "name": "tora-protocol",
   "version": "1.0.0",
   "description": "Port of Haxe Tora protocol in JS",
   "author": "Thomas Lupin",
