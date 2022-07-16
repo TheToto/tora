@@ -1,8 +1,13 @@
 /// <reference types="node" />
 import { Socket } from "net";
 import { Buffer } from "buffer";
-import WebSocket, { MessageEvent } from "isomorphic-ws";
+import WebSocket from "isomorphic-ws";
 import { Code } from "./Code";
+interface MessageEvent {
+    data: string | Buffer | ArrayBuffer | Buffer[];
+    type: string;
+    target: WebSocket;
+}
 export declare class ToraProtocol {
     host: string;
     port: number;
@@ -36,3 +41,4 @@ export declare class ToraProtocol {
     onBytes(bytes: Buffer): void;
     onData(_data: string): void;
 }
+export {};

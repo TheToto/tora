@@ -1,10 +1,16 @@
 import { Socket } from "net"
 import { Buffer } from "buffer"
-import WebSocket, { MessageEvent } from "isomorphic-ws"
+import WebSocket from "isomorphic-ws"
 
 import { Code } from "./Code"
 
 const URL_REGEXP = /^(?:https?|wss?):\/\/([^\/:]+)(:[0-9]+)?(.*)$/
+
+interface MessageEvent {
+    data: string | Buffer | ArrayBuffer | Buffer[]
+    type: string
+    target: WebSocket
+}
 
 export class ToraProtocol {
     host: string
