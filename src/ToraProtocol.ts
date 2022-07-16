@@ -1,6 +1,6 @@
 import { Socket } from "net"
 import { Buffer } from "buffer"
-import { WebSocket, MessageEvent } from "isomorphic-ws"
+import WebSocket, { MessageEvent } from "isomorphic-ws"
 
 import { Code } from "./Code"
 
@@ -135,15 +135,16 @@ export class ToraProtocol {
         this.send(Code.CExecute, "")
     }
 
-    onSocketData(data?: MessageEvent | Buffer | ArrayBuffer | string) {
+    onSocketData(data?: MessageEvent | string | Buffer | ArrayBuffer | Buffer[]) {
         if (!this.sock) return
 
         let bytes: Buffer | null = null
         if (data) {
-            if (data instanceof MessageEvent) data = data.data // Can be a ArrayBuffer or a string
+            if (data.hasOwnProperty("data")) data = (data as MessageEvent).data
+
             if (data instanceof Buffer) bytes = data
-            else if (data instanceof ArrayBuffer) bytes = new Buffer(data)
-            else if (typeof data === "string") bytes = Buffer.from(data) // This should never append.
+            else if (data instanceof ArrayBuffer) bytes = Buffer.from(data)
+            else if (typeof data === "string") bytes = Buffer.from(data)
             else throw new Error("Invalid type")
         }
         if (this.remaining) {
