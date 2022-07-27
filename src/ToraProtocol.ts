@@ -141,12 +141,18 @@ export class ToraProtocol {
         this.send(Code.CExecute, "")
     }
 
+    static isMessageEvent(test: any): test is MessageEvent {
+        return test?.data instanceof ArrayBuffer;
+    }
+
     onSocketData(data?: MessageEvent | string | Buffer | ArrayBuffer | Buffer[]) {
         if (!this.sock) return
 
         let bytes: Buffer | null = null
         if (data) {
-            if (data.hasOwnProperty("data")) data = (data as MessageEvent).data
+            if (ToraProtocol.isMessageEvent(data)) {
+                data = data.data
+            }
 
             if (data instanceof Buffer) bytes = data
             else if (data instanceof ArrayBuffer) bytes = Buffer.from(data)
